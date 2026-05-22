@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slabvest — Track Your Slabs Like Stocks</title>
+<meta name="description" content="The portfolio app for serious sports card investors. Track your graded cards like stocks — real-time values, P&L tracking, and market intelligence for PSA, BGS & SGC slabs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8f8f6;
+  --black: #0d0d0d;
+  --white: #ffffff;
+  --accent: #c8f562;
+  --teal: #2dd4bf;
+  --green: #16a34a;
+  --red: #dc2626;
+  --muted: #737373;
+  --border: #e4e4e1;
+  --surface: #ffffff;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--black);
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 58px; padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(248,248,246,0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.logo { font-size: 1rem; font-weight: 800; letter-spacing: -0.03em; color: var(--black); text-decoration: none; display: flex; align-items: center; gap: 0.4rem; }
+.logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+.nav-r { display: flex; align-items: center; gap: 2rem; }
+nav a.nav-link { font-size: 0.82rem; font-weight: 500; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+nav a.nav-link:hover { color: var(--black); }
+.btn { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--black); color: var(--white); padding: 0.5rem 1.1rem; border-radius: 100px; font-size: 0.8rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: background 0.15s, transform 0.1s; font-family: 'Inter', sans-serif; }
+.btn:hover { background: #1a1a1a; transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--black); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--surface); }
+
+/* ── TICKER ── */
+.ticker-bar {
+  margin-top: 58px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.7rem 0; overflow: hidden;
+}
+.ticker { display: flex; width: max-content; animation: scroll 40s linear infinite; }
+.ticker:hover { animation-play-state: paused; }
+.ticker-item { display: flex; align-items: center; gap: 0.45rem; padding: 0 1.75rem; border-right: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; white-space: nowrap; }
+.ti-n { color: var(--muted); }
+.ti-v { color: var(--black); font-weight: 500; }
+.ti-u { color: var(--green); font-weight: 600; }
+.ti-d { color: var(--red); font-weight: 600; }
+@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+/* ── HERO ── */
+.hero {
+  padding: 5rem 2rem 4rem;
+  max-width: 1160px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5rem; align-items: center;
+  min-height: calc(100vh - 100px);
+}
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: #f0fdf4; border: 1px solid #bbf7d0; color: var(--green);
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.3rem 0.75rem; border-radius: 100px; margin-bottom: 1.75rem;
+}
+.eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+h1 {
+  font-size: clamp(2.6rem, 4.5vw, 4rem);
+  font-weight: 900; letter-spacing: -0.045em; line-height: 0.97;
+  color: var(--black); margin-bottom: 1.5rem;
+}
+h1 .hi { color: var(--teal); }
+.hero-sub { font-size: 0.975rem; color: var(--muted); max-width: 380px; line-height: 1.72; margin-bottom: 2.25rem; }
+.cta-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+.badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.75rem; border-radius: 100px; font-size: 0.72rem; font-weight: 700; border: 1px solid; }
+.badge.psa { color: #b91c1c; border-color: #fecaca; background: #fff5f5; }
+.badge.bgs { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+.badge.sgc { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
+.badge.cgc { color: #b45309; border-color: #fde68a; background: #fffbeb; }
+
+/* ── PORTFOLIO PREVIEW CARD ── */
+.preview-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.07);
+}
+.pc-top { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+.pc-label { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+.pc-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 0.2rem; }
+.pc-meta { display: flex; gap: 1.25rem; }
+.pc-stat { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; }
+.pc-stat .lbl { color: var(--muted); }
+.pc-stat .up { color: var(--green); font-weight: 600; }
+.pc-stat .dn { color: var(--red); font-weight: 600; }
+
+.sparkline { width: 100%; height: 64px; display: block; }
+
+.pc-list { padding: 0.5rem 0; }
+.pc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  cursor: default; transition: background 0.1s;
+}
+.pc-row:last-child { border-bottom: none; }
+.pc-row:hover { background: var(--bg); }
+.pc-row-l { display: flex; flex-direction: column; gap: 0.1rem; }
+.pc-row-name { font-size: 0.82rem; font-weight: 700; letter-spacing: -0.01em; }
+.pc-row-sub { font-size: 0.68rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.pc-row-r { display: flex; flex-direction: column; align-items: flex-end; gap: 0.1rem; }
+.pc-row-val { font-size: 0.85rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+.pc-row-chg { font-size: 0.7rem; font-weight: 700; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.gtag { display: inline-block; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.35rem; border-radius: 4px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-family: 'IBM Plex Mono', monospace; margin-left: 0.25rem; vertical-align: middle; }
+
+/* ── HOW IT WORKS ── */
+.hiw { padding: 6rem 2rem; border-top: 1px solid var(--border); }
+.section-head { max-width: 1160px; margin: 0 auto 4rem; }
+.s-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+h2 { font-size: clamp(1.8rem, 3vw, 2.75rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+.steps { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid var(--border); }
+.step { padding: 2.25rem 2rem; border-right: 1px solid var(--border); transition: background 0.15s; }
+.step:last-child { border-right: none; }
+.step:hover { background: var(--surface); }
+.step-n { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 1.5rem; }
+.step h3 { font-size: 0.92rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+.step p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+/* ── FEATURES GRID ── */
+.feats { padding: 0 2rem 6rem; border-bottom: 1px solid var(--border); }
+.feats-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.feat { background: var(--surface); padding: 2.25rem 2rem; transition: background 0.15s; }
+.feat:hover { background: var(--bg); }
+.feat-icon { font-size: 1.25rem; margin-bottom: 1.1rem; }
+.feat h3 { font-size: 0.9rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+.feat p { font-size: 0.8rem; color: var(--muted); line-height: 1.65; }
+
+/* ── PORTFOLIO TABLE ── */
+.table-sec { border-bottom: 1px solid var(--border); }
+.table-head { max-width: 1160px; margin: 0 auto; padding: 4rem 2rem 2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+.total-v { font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 900; letter-spacing: -0.04em; }
+.total-c { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--green); font-weight: 600; margin-top: 0.2rem; }
+.tbl-wrap { max-width: 1160px; margin: 0 auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-align: left; font-weight: 400; padding: 0.7rem 2rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); }
+thead th:nth-child(n+2) { text-align: right; }
+tbody td { padding: 0.95rem 2rem; border-bottom: 1px solid var(--border); font-size: 0.84rem; }
+tbody td:nth-child(n+2) { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--muted); }
+.t-name { font-weight: 700; font-size: 0.87rem; letter-spacing: -0.01em; }
+.t-sub { font-size: 0.69rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-top: 0.1rem; }
+tbody tr:hover td { background: #fafaf8; }
+.wt { font-weight: 700 !important; }
+
+/* ── WAITLIST ── */
+.waitlist { padding: 7rem 2rem; max-width: 600px; margin: 0 auto; }
+.waitlist h2 { margin-bottom: 0.9rem; }
+.waitlist p { font-size: 0.95rem; color: var(--muted); line-height: 1.72; margin-bottom: 2.5rem; max-width: 440px; }
+.irow { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.irow input { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); padding: 0.78rem 1.2rem; font-family: 'Inter', sans-serif; font-size: 0.88rem; color: var(--black); border-radius: 100px; outline: none; transition: border-color 0.15s; }
+.irow input:focus { border-color: var(--black); }
+.irow input::placeholder { color: #c0c0bc; }
+.ok-msg { display: none; font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--green); margin-top: 0.85rem; }
+.fine-print { font-size: 0.72rem; color: var(--muted); margin-top: 1rem; }
+.fine-print span { font-family: 'IBM Plex Mono', monospace; }
+
+/* ── FOOTER ── */
+.foot-big { background: var(--accent); padding: 5rem 2rem 0; }
+.foot-brand { font-size: clamp(4.5rem, 16vw, 14rem); font-weight: 900; letter-spacing: -0.05em; line-height: 0.83; color: var(--black); }
+.foot-bottom { background: var(--accent); border-top: 1px solid rgba(0,0,0,0.1); padding: 1.75rem 2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.foot-links { display: flex; gap: 1.75rem; flex-wrap: wrap; }
+.foot-links a { font-size: 0.78rem; color: rgba(0,0,0,0.5); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+.foot-links a:hover { color: var(--black); }
+.foot-copy { font-size: 0.72rem; color: rgba(0,0,0,0.4); font-family: 'IBM Plex Mono', monospace; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 960px) {
+  .hero { grid-template-columns: 1fr; min-height: auto; padding: 3rem 1.5rem 2rem; gap: 3rem; }
+  .steps { grid-template-columns: 1fr 1fr; }
+  .step:nth-child(2) { border-right: none; }
+  .step:nth-child(3) { border-top: 1px solid var(--border); }
+  .step:nth-child(4) { border-top: 1px solid var(--border); }
+  .feats-inner { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  nav { padding: 0 1.25rem; }
+  .nav-r .nav-link { display: none; }
+  .hiw, .feats, .waitlist { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .table-head { padding: 2.5rem 1.25rem 1.5rem; }
+  thead th, tbody td { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .steps { grid-template-columns: 1fr; }
+  .step { border-right: none; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; }
+  .foot-big { padding: 3rem 1.25rem 0; }
+  .foot-bottom { padding: 1.5rem 1.25rem 2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#"><span class="logo-dot"></span>Slabvest</a>
+  <div class="nav-r">
+    <a href="#how" class="nav-link">How it works</a>
+    <a href="#portfolio" class="nav-link">Features</a>
+    <a href="#waitlist" class="btn">Join Beta</a>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker" id="ticker"></div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="eyebrow">Now in private beta</div>
+    <h1>Track your<br>slabs like<br><span class="hi">stocks.</span></h1>
+    <p class="hero-sub">The portfolio app for serious sports card investors. Real-time market values, P&L tracking, and market intelligence — built for PSA, BGS & SGC graded cards.</p>
+    <div class="cta-row">
+      <a href="#waitlist" class="btn">Get Early Access</a>
+      <a href="#how" class="btn btn-outline">How it works</a>
+    </div>
+    <div class="badge-row">
+      <span class="badge psa">PSA</span>
+      <span class="badge bgs">BGS</span>
+      <span class="badge sgc">SGC</span>
+      <span class="badge cgc">CGC</span>
+    </div>
+  </div>
+
+  <div class="preview-card">
+    <div class="pc-top">
+      <div class="pc-label">Total Portfolio Value</div>
+      <div class="pc-value">$8,620</div>
+      <div class="pc-meta">
+        <div class="pc-stat"><span class="lbl">Today </span><span class="up">▲ +$340 (+4.1%)</span></div>
+        <div class="pc-stat"><span class="lbl">30D </span><span class="up">▲ +$1,680 (+24.2%)</span></div>
+      </div>
+    </div>
+    <svg class="sparkline" viewBox="0 0 400 64" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,54 L40,50 L80,46 L110,42 L140,38 L170,34 L200,30 L220,26 L250,22 L275,18 L300,14 L330,11 L360,8 L400,5" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round"/>
+      <path d="M0,54 L40,50 L80,46 L110,42 L140,38 L170,34 L200,30 L220,26 L250,22 L275,18 L300,14 L330,11 L360,8 L400,5 L400,64 L0,64Z" fill="url(#sg)"/>
+    </svg>
+    <div class="pc-list">
+      <div class="pc-row">
+        <div class="pc-row-l">
+          <span class="pc-row-name">Wembanyama #136<span class="gtag">PSA 10</span></span>
+          <span class="pc-row-sub">2023 Silver Prizm</span>
+        </div>
+        <div class="pc-row-r">
+          <span class="pc-row-val">$2,800</span>
+          <span class="pc-row-chg pos">+35.8%</span>
+        </div>
+      </div>
+      <div class="pc-row">
+        <div class="pc-row-l">
+          <span class="pc-row-name">Luka Doncic #280<span class="gtag">PSA 10</span></span>
+          <span class="pc-row-sub">2018 Silver Prizm</span>
+        </div>
+        <div class="pc-row-r">
+          <span class="pc-row-val">$1,400</span>
+          <span class="pc-row-chg pos">+26.2%</span>
+        </div>
+      </div>
+      <div class="pc-row">
+        <div class="pc-row-l">
+          <span class="pc-row-name">LeBron James RC<span class="gtag">BGS 9</span></span>
+          <span class="pc-row-sub">2003 Topps Chrome</span>
+        </div>
+        <div class="pc-row-r">
+          <span class="pc-row-val">$6,800</span>
+          <span class="pc-row-chg pos">+61.9%</span>
+        </div>
+      </div>
+      <div class="pc-row">
+        <div class="pc-row-l">
+          <span class="pc-row-name">Tom Brady RC<span class="gtag">PSA 10</span></span>
+          <span class="pc-row-sub">2000 Bowman Chrome</span>
+        </div>
+        <div class="pc-row-r">
+          <span class="pc-row-val">$2,470</span>
+          <span class="pc-row-chg neg">−11.8%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="hiw" id="how">
+  <div class="section-head">
+    <div class="s-eyebrow">How it works</div>
+    <h2>Simple. Accurate.<br>Built for investors.</h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">01</div>
+      <h3>Add your slabs</h3>
+      <p>Log your graded cards by player, set, variant, grade, and purchase price. Takes under 30 seconds per card.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">02</div>
+      <h3>Live market prices</h3>
+      <p>We pull real eBay sold data daily. Your portfolio is always priced against actual market comps — not estimates.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">03</div>
+      <h3>Track P&L</h3>
+      <p>See your cost basis, current value, and total return on every card. Know exactly what you're up or down.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">04</div>
+      <h3>Market intelligence</h3>
+      <p>Follow trending players, top movers, and recent big sales. Stay ahead of the market — not behind it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="feats" id="portfolio">
+  <div class="feats-inner">
+    <div class="feat">
+      <div class="feat-icon">📊</div>
+      <h3>Portfolio dashboard</h3>
+      <p>Your total value, daily change, and 30-day performance at a glance. Like Robinhood, but for your slabs.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💰</div>
+      <h3>Profit & Loss tracking</h3>
+      <p>Cost basis, ROI, and total return per card and across your whole collection. Know your real numbers.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔔</div>
+      <h3>Price alerts</h3>
+      <p>Set buy and sell targets. Get notified the moment a card hits your price — so you never miss the move.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📈</div>
+      <h3>Price history charts</h3>
+      <p>30, 90, and 365-day price charts for any graded card. Spot trends and time your entries with confidence.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🏆</div>
+      <h3>Pop report data</h3>
+      <p>PSA and BGS population report inline. Understand scarcity instantly — know if supply is growing or tight.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🤖</div>
+      <h3>AI insights <span style="font-size:0.65rem;font-weight:700;color:var(--muted);background:var(--border);padding:0.1rem 0.4rem;border-radius:4px;margin-left:0.3rem;">COMING SOON</span></h3>
+      <p>Liquidity scores, sell timing recommendations, and market regime detection — powered by real transaction data.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO TABLE -->
+<section class="table-sec">
+  <div class="table-head">
+    <div>
+      <div class="s-eyebrow">Sample portfolio</div>
+      <h2>Your collection,<br>quantified.</h2>
+    </div>
+    <div style="text-align:right;">
+      <div class="total-v">$8,620</div>
+      <div class="total-c">▲ +$1,680 this month (+24.2%)</div>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Card</th>
+          <th>Grader</th>
+          <th>Cost Basis</th>
+          <th>Market Value</th>
+          <th>Return</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="t-name">Victor Wembanyama #136</div><div class="t-sub">2023 Panini Silver Prizm</div></td>
+          <td><span class="gtag" style="margin:0;font-size:0.72rem;padding:0.2rem 0.5rem;">PSA 10</span></td>
+          <td>$2,050</td><td>$2,800</td><td class="pos wt">+36.6%</td>
+        </tr>
+        <tr>
+          <td><div class="t-name">Luka Doncic #280</div><div class="t-sub">2018 Panini Silver Prizm</div></td>
+          <td><span class="gtag" style="margin:0;font-size:0.72rem;padding:0.2rem 0.5rem;">PSA 10</span></td>
+          <td>$1,100</td><td>$1,400</td><td class="pos wt">+27.3%</td>
+        </tr>
+        <tr>
+          <td><div class="t-name">LeBron James RC</div><div class="t-sub">2003 Topps Chrome</div></td>
+          <td><span class="gtag" style="margin:0;font-size:0.72rem;padding:0.2rem 0.5rem;">BGS 9</span></td>
+          <td>$4,200</td><td>$6,800</td><td class="pos wt">+61.9%</td>
+        </tr>
+        <tr>
+          <td><div class="t-name">Michael Jordan RC</div><div class="t-sub">1986 Fleer</div></td>
+          <td><span class="gtag" style="margin:0;font-size:0.72rem;padding:0.2rem 0.5rem;">PSA 8</span></td>
+          <td>$3,100</td><td>$4,250</td><td class="pos wt">+37.1%</td>
+        </tr>
+        <tr>
+          <td><div class="t-name">Tom Brady RC</div><div class="t-sub">2000 Bowman Chrome</div></td>
+          <td><span class="gtag" style="margin:0;font-size:0.72rem;padding:0.2rem 0.5rem;">PSA 10</span></td>
+          <td>$2,800</td><td>$2,470</td><td class="neg wt">−11.8%</td>
+        </tr>
+        <tr>
+          <td><div class="t-name">Anthony Edwards RC</div><div class="t-sub">2020 Panini Silver Prizm</div></td>
+          <td><span class="gtag" style="margin:0;font-size:0.72rem;padding:0.2rem 0.5rem;">PSA 10</span></td>
+          <td>$1,200</td><td>$1,850</td><td class="pos wt">+54.2%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- WAITLIST -->
+<section class="waitlist" id="waitlist">
+  <div class="s-eyebrow" style="margin-bottom:1rem;">Early access</div>
+  <h2>Know exactly<br>what your slabs<br>are worth.</h2>
+  <p>Join the beta. We're onboarding serious collectors in batches — early members get lifetime free access to all Pro features.</p>
+  <div class="irow">
+    <input type="email" id="email-input" placeholder="your@email.com" />
+    <button class="btn" onclick="sub()">Get Early Access</button>
+  </div>
+  <p class="ok-msg" id="ok-msg">✓ You're on the list — we'll reach out soon.</p>
+  <p class="fine-print">Built for <span>PSA · BGS · SGC · CGC</span> graded card investors. Free to join.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-big">
+    <div class="foot-brand">Slabvest</div>
+  </div>
+  <div class="foot-bottom">
+    <div class="foot-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+      <a href="#">Support</a>
+    </div>
+    <div class="foot-copy">© 2025 Slabvest · Sports Card Portfolio Tracker</div>
+  </div>
+</footer>
+
+<script>
+const T = [
+  { n:'Wembanyama #136 · 2023 Silver Prizm · PSA 10', v:'$2,800', c:'+35.8%', u:true },
+  { n:'Luka Doncic #280 · 2018 Silver Prizm · PSA 10', v:'$1,400', c:'+26.2%', u:true },
+  { n:'LeBron James RC · BGS 9.5', v:'$22,400', c:'+4.2%', u:true },
+  { n:'Jordan RC · PSA 9', v:'$18,750', c:'+2.8%', u:true },
+  { n:'Patrick Mahomes RC · PSA 10', v:'$6,100', c:'+5.3%', u:true },
+  { n:'Anthony Edwards RC · PSA 10', v:'$1,850', c:'+12.1%', u:true },
+  { n:'Brady RC · PSA 10', v:'$5,200', c:'−1.1%', u:false },
+  { n:'Steph Curry Prizm · PSA 10', v:'$9,400', c:'+3.3%', u:true },
+  { n:'Ohtani RC · PSA 10', v:'$4,600', c:'−0.6%', u:false },
+  { n:'Zion Williamson RC · BGS 9', v:'$2,200', c:'+7.5%', u:true },
+];
+const el = document.getElementById('ticker');
+el.innerHTML = [...T,...T].map(i=>`
+  <div class="ticker-item">
+    <span class="ti-n">${i.n}</span>
+    <span class="ti-v">${i.v}</span>
+    <span class="${i.u?'ti-u':'ti-d'}">${i.c}</span>
+  </div>`).join('');
+
+function sub() {
+  const inp = document.getElementById('email-input');
+  const msg = document.getElementById('ok-msg');
+  if (!inp.value.includes('@')) { inp.style.borderColor='#dc2626'; return; }
+  inp.closest('.irow').style.display = 'none';
+  msg.style.display = 'block';
+}
+document.getElementById('email-input').addEventListener('keydown', e => { if(e.key==='Enter') sub(); });
+</script>
+</body>
+</html>
